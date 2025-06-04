@@ -1,0 +1,4 @@
+# App specific
+node_modules/
+lighthouse-report/
+.lighthouseci/

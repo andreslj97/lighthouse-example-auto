@@ -1,0 +1,16 @@
+{
+  "name": "lighthouse",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "lighthouse:run": "node run-lighthouse.js",
+    "vercel-start": "node run-lighthouse.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@lhci/cli": "^0.14.0"
+  }
+}
