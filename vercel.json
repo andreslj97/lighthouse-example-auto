@@ -1,7 +1,7 @@
 {
   "functions": {
     "api/run.js": {
-      "memory": 3008
+      "memory": 1008
     }
   }
 }
