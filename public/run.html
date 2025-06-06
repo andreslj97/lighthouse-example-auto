@@ -1,0 +1,38 @@
+<!-- pages/run.html -->
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ejecutar Lighthouse</title>
+</head>
+<body>
+  <h1>Ejecutar Lighthouse</h1>
+  <button id="runButton">Ejecutar</button>
+  <p id="status"></p>
+
+  <script>
+    const button = document.getElementById('runButton');
+    const status = document.getElementById('status');
+
+    button.addEventListener('click', async () => {
+      button.disabled = true;
+      status.textContent = 'Ejecutando...';
+
+      try {
+        const res = await fetch('/api/run');
+        const data = await res.json();
+
+        if (res.ok) {
+          status.innerHTML = `✅ Reporte generado: <a href="${data.url}" target="_blank">Ver</a>`;
+        } else {
+          throw new Error(data.error || 'Error desconocido');
+        }
+      } catch (err) {
+        status.textContent = '❌ ' + err.message;
+      } finally {
+        button.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

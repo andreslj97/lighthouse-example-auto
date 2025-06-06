@@ -12,5 +12,14 @@
   "license": "ISC",
   "devDependencies": {
     "@lhci/cli": "^0.14.0"
+<<<<<<< HEAD
   }
 }
+=======
+  },
+  "dependencies": {
+    "googleapis": "^105.0.0",
+    "open": "^10.1.2"
+  }
+}
+>>>>>>> development

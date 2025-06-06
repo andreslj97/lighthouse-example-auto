@@ -1,4 +1,14 @@
+<<<<<<< HEAD
 # App specific
 node_modules/
 lighthouse-report/
 .lighthouseci/
+=======
+node_modules/
+lighthouse-report/
+.lighthouseci/
+.vercel
+.env.local
+token.json
+credentials.json
+>>>>>>> development

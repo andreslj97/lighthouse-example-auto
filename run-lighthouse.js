@@ -1,31 +1,112 @@
-const { execSync } = require('child_process');
-const path = require('path');
-const fs = require('fs');
+import fs from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
+import { google } from 'googleapis';
 
-// Timestamp para nombrar carpeta única
-const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-const reportDir = path.join(__dirname, 'lighthouse-report', timestamp);
-const lhciTempDir = path.join(__dirname, '.lighthouseci');
+const lhciTempDir = path.join(process.cwd(), '.lighthouseci');
 
-console.log(`📊 Ejecutando Lighthouse CI...`);
+async function loadCredentials() {
+  const {
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI,
+    GOOGLE_TOKEN
+  } = process.env;
 
-try {
-  // Ejecutar lighthouse-ci
-  execSync('npx lhci collect', { stdio: 'inherit' });
+  if (!GOOGLE_CLIENT_ID || !GOOGLE_CLIENT_SECRET || !GOOGLE_REDIRECT_URI || !GOOGLE_TOKEN) {
+    throw new Error('Faltan variables de entorno para la autenticación con Google.');
+  }
 
-  // Crear carpeta de destino con timestamp
-  fs.mkdirSync(reportDir, { recursive: true });
+  const oAuth2Client = new google.auth.OAuth2(
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI
+  );
 
-  // Copiar archivos desde .lighthouseci a carpeta con timestamp
-  const files = fs.readdirSync(lhciTempDir);
-  files.forEach(file => {
-    const src = path.join(lhciTempDir, file);
-    const dest = path.join(reportDir, file);
-    fs.copyFileSync(src, dest);
-  });
+  const token = JSON.parse(GOOGLE_TOKEN);
+  oAuth2Client.setCredentials(token);
 
-  console.log(`✅ Reportes guardados en: ${reportDir}`);
-} catch (err) {
-  console.error('❌ Error ejecutando LHCI:', err.message);
-  process.exit(1);
+  return oAuth2Client;
+}
+
+async function uploadToDrive(auth) {
+  const drive = google.drive({ version: 'v3', auth });
+
+  const htmlReports = fs.readdirSync(lhciTempDir)
+    .filter(file => file.endsWith('.html'))
+    .map(file => ({
+      name: file,
+      time: fs.statSync(path.join(lhciTempDir, file)).mtime.getTime(),
+    }))
+    .sort((a, b) => b.time - a.time);
+
+  if (htmlReports.length < 1) {
+    throw new Error('No se encontró ningún archivo HTML de reporte en ' + lhciTempDir);
+  }
+
+  const filesToUpload = htmlReports.slice(0, 2); // Subir los dos más recientes
+  const urls = [];
+
+  for (const fileInfo of filesToUpload) {
+    const reportPath = path.join(lhciTempDir, fileInfo.name);
+
+    const fileMetadata = {
+      name: `lighthouse-${fileInfo.name}`,
+    };
+
+    const media = {
+      mimeType: 'text/html',
+      body: fs.createReadStream(reportPath),
+    };
+
+    const file = await drive.files.create({
+      resource: fileMetadata,
+      media: media,
+      fields: 'id',
+    });
+
+    await drive.permissions.create({
+      fileId: file.data.id,
+      requestBody: {
+        role: 'reader',
+        type: 'anyone',
+      },
+    });
+
+    const url = `https://drive.google.com/file/d/${file.data.id}/view`;
+    console.log(`✅ Reporte subido: ${fileInfo.name} → ${url}`);
+    urls.push(url);
+  }
+
+  return urls;
+}
+
+export async function runLighthouse() {
+
+    const {
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI,
+    GOOGLE_TOKEN
+  } = process.env;
+
+  try {
+    console.log("VARIABLES DE ENTORNO:",    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_REDIRECT_URI,
+    GOOGLE_TOKEN);
+    
+    console.log('📊 Ejecutando Lighthouse CI...');
+    execSync('npx lhci collect', { stdio: 'inherit' });
+
+    const auth = await loadCredentials();
+    const urls = await uploadToDrive(auth);
+
+    console.log('✅ Reportes subidos a Google Drive:', urls);
+
+    return { url: urls };
+  } catch (error) {
+    console.error('❌ Error en runLighthouse:', error.message);
+    throw error;
+  }
 }

@@ -1,6 +1,7 @@
 {
   "functions": {
     "api/run.js": {
+<<<<<<< HEAD
       "runtime": "nodejs20.x"
     }
   },
@@ -10,4 +11,9 @@
       "schedule": "0 */6 * * *"
     }
   ]
+=======
+      "memory": 3008
+    }
+  }
+>>>>>>> development
 }
