@@ -1,13 +1,7 @@
 {
   "functions": {
     "api/run.js": {
-      "runtime": "nodejs20.x"
+      "memory": 3008
     }
-  },
-  "cron": [
-    {
-      "path": "/api/run",
-      "schedule": "0 */6 * * *"
-    }
-  ]
+  }
 }
