@@ -3,3 +3,5 @@ lighthouse-report/
 .lighthouseci/
 .vercel
 .env.local
+token.json
+credentials.json
