@@ -5,7 +5,7 @@
         "https://www.chedraui.com.mx/supermercado?workspace=betaplpload",
         "https://www.chedraui.com.mx/supermercado?workspace=currentmaster"
       ],
-      "numberOfRuns": 5,
+      "numberOfRuns": 1,
       "throttlingMethod": "simulate",
       "settings": {
         "formFactor": "desktop",
